@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between mb-3">
+  <h1 class="h3">Получатели</h1>
+  <a class="btn btn-primary" href="{% url 'mailings:recipient_create' %}">Добавить</a>
+</div>
+<table class="table table-striped">
+  <thead><tr><th>Ф. И. О.</th><th>Email</th><th>Комментарий</th><th></th></tr></thead>
+  <tbody>
+  {% for r in object_list %}
+    <tr>
+      <td>{{ r.full_name }}</td>
+      <td>{{ r.email }}</td>
+      <td>{{ r.comment|truncatechars:50 }}</td>
+      <td class="text-end">
+        {% if r.owner_id == user.id %}
+          <a class="btn btn-sm btn-outline-primary" href="{% url 'mailings:recipient_update' r.pk %}">Изменить</a>
+          <a class="btn btn-sm btn-outline-danger" href="{% url 'mailings:recipient_delete' r.pk %}">Удалить</a>
+        {% endif %}
+      </td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="4">Пока пусто</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

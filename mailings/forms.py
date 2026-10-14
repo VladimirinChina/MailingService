@@ -1,0 +1,41 @@
+from django import forms
+
+from .models import Mailing, Message, Recipient
+
+
+class BootstrapMixin:
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            css = "form-select" if isinstance(field.widget, forms.Select) else "form-control"
+            field.widget.attrs.setdefault("class", css)
+
+
+class RecipientForm(BootstrapMixin, forms.ModelForm):
+    class Meta:
+        model = Recipient
+        fields = ["email", "full_name", "comment"]
+        widgets = {"comment": forms.Textarea(attrs={"rows": 3})}
+
+
+class MessageForm(BootstrapMixin, forms.ModelForm):
+    class Meta:
+        model = Message
+        fields = ["subject", "body"]
+        widgets = {"body": forms.Textarea(attrs={"rows": 6})}
+
+
+class MailingForm(BootstrapMixin, forms.ModelForm):
+    class Meta:
+        model = Mailing
+        fields = ["start_time", "end_time", "message", "recipients"]
+        widgets = {
+            "start_time": forms.DateTimeInput(attrs={"type": "datetime-local"}, format="%Y-%m-%dT%H:%M"),
+            "end_time": forms.DateTimeInput(attrs={"type": "datetime-local"}, format="%Y-%m-%dT%H:%M"),
+        }
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if user is not None:
+            self.fields["message"].queryset = Message.objects.filter(owner=user)
+            self.fields["recipients"].queryset = Recipient.objects.filter(owner=user)

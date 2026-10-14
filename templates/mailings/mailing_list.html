@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between mb-3">
+  <h1 class="h3">Рассылки</h1>
+  <a class="btn btn-primary" href="{% url 'mailings:mailing_create' %}">Создать</a>
+</div>
+<table class="table table-striped">
+  <thead><tr><th>#</th><th>Статус</th><th>Начало</th><th>Окончание</th><th>Сообщение</th><th>Получателей</th><th></th></tr></thead>
+  <tbody>
+  {% for m in object_list %}
+    <tr>
+      <td>{{ m.pk }}</td>
+      <td>{{ m.status }}{% if m.is_disabled %} <span class="badge bg-secondary">отключена</span>{% endif %}</td>
+      <td>{{ m.start_time|date:"d.m.Y H:i" }}</td>
+      <td>{{ m.end_time|date:"d.m.Y H:i" }}</td>
+      <td>{{ m.message.subject }}</td>
+      <td>{{ m.recipients_count }}</td>
+      <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{% url 'mailings:mailing_detail' m.pk %}">Открыть</a></td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="7">Пока пусто</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
