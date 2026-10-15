@@ -73,4 +73,6 @@ urlpatterns = [
         ),
         name="password_reset_complete",
     ),
+    path("list/", views.UserListView.as_view(), name="user_list"),
+    path("<int:pk>/toggle/", views.ToggleUserActiveView.as_view(), name="user_toggle"),
 ]

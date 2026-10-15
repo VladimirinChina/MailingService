@@ -1,13 +1,14 @@
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
+from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect, render, get_object_or_404
 from django.urls import reverse, reverse_lazy
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
-from django.views.generic import CreateView
+from django.views.generic import CreateView, ListView, View
 
 from .forms import UserRegisterForm
 
@@ -57,3 +58,25 @@ def confirm_email(request, uidb64, token):
         "users/message.html",
         {"title": "Ссылка недействительна", "text": "Ссылка подтверждения неверна или устарела."},
     )
+
+
+class UserListView(PermissionRequiredMixin, ListView):
+    model = User
+    permission_required = "users.can_view_all_users"
+    template_name = "users/user_list.html"
+    ordering = ["email"]
+
+
+class ToggleUserActiveView(PermissionRequiredMixin, View):
+    permission_required = "users.can_block_users"
+
+    def post(self, request, pk):
+        target = get_object_or_404(User, pk=pk)
+        if target.pk == request.user.pk or target.is_superuser:
+            messages.error(request, "Этого пользователя заблокировать нельзя.")
+        else:
+            target.is_active = not target.is_active
+            target.save(update_fields=["is_active"])
+            state = "разблокирован" if target.is_active else "заблокирован"
+            messages.success(request, f"Пользователь {target.email} {state}.")
+        return redirect("users:user_list")

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="h3 mb-3">Пользователи сервиса</h1>
+<table class="table table-striped">
+  <thead><tr><th>Email</th><th>Регистрация</th><th>Статус</th><th></th></tr></thead>
+  <tbody>
+  {% for u in object_list %}
+    <tr>
+      <td>{{ u.email }}</td>
+      <td>{{ u.date_joined|date:"d.m.Y" }}</td>
+      <td>
+        {% if u.is_active %}<span class="badge bg-success">активен</span>
+        {% else %}<span class="badge bg-secondary">заблокирован / не подтверждён</span>{% endif %}
+      </td>
+      <td class="text-end">
+        {% if perms.users.can_block_users and u != user and not u.is_superuser %}
+        <form method="post" action="{% url 'users:user_toggle' u.pk %}" class="d-inline">
+          {% csrf_token %}
+          <button class="btn btn-sm {% if u.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %}">
+            {% if u.is_active %}Заблокировать{% else %}Разблокировать{% endif %}
+          </button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
