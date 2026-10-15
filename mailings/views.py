@@ -1,5 +1,5 @@
 from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.db.models import Count
 from django.db.models.query_utils import Q
 from django.shortcuts import get_object_or_404, redirect
@@ -187,3 +187,15 @@ class StatisticsView(LoginRequiredMixin, TemplateView):
             .order_by("-start_time")
         )
         return context
+
+
+class MailingToggleDisabledView(PermissionRequiredMixin, View):
+    permission_required = "mailings.can_disable_mailings"
+
+    def post(self, request, pk):
+        mailing = get_object_or_404(Mailing, pk=pk)
+        mailing.is_disabled = not mailing.is_disabled
+        mailing.save(update_fields=["is_disabled"])
+        state = "отключена" if mailing.is_disabled else "снова включена"
+        messages.success(request, f"Рассылка #{mailing.pk} {state}.")
+        return redirect("mailings:mailing_detail", pk=pk)
