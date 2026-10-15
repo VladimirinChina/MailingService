@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Count
+from django.db.models.query_utils import Q
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.utils import timezone
@@ -8,7 +9,7 @@ from django.views import View
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, TemplateView, UpdateView
 
 from .forms import MailingForm, MessageForm, RecipientForm
-from .models import Mailing, Message, Recipient
+from .models import Mailing, Message, Recipient, Attempt
 from .services import MailingNotAllowed, refresh_statuses, send_mailing
 
 
@@ -162,3 +163,27 @@ class MailingSendView(LoginRequiredMixin, View):
         else:
             messages.success(request, f"Отправка завершена. Успешно: {ok}, не успешно: {failed}.")
         return redirect("mailings:mailing_detail", pk=pk)
+
+
+class StatisticsView(LoginRequiredMixin, TemplateView):
+    template_name = "mailings/statistics.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        totals = Attempt.objects.filter(mailing__owner=user).aggregate(
+            success=Count("id", filter=Q(status=Attempt.SUCCESS)),
+            fail=Count("id", filter=Q(status=Attempt.FAIL)),
+        )
+        context["success"] = totals["success"]
+        context["fail"] = totals["fail"]
+        context["sent"] = totals["success"]  # отправленные сообщения = успешные попытки
+        context["per_mailing"] = (
+            Mailing.objects.filter(owner=user)
+            .annotate(
+                success_count=Count("attempts", filter=Q(attempts__status=Attempt.SUCCESS)),
+                fail_count=Count("attempts", filter=Q(attempts__status=Attempt.FAIL)),
+            )
+            .order_by("-start_time")
+        )
+        return context
