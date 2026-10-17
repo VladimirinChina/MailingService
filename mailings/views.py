@@ -1,15 +1,17 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.db.models import Count
-from django.db.models.query_utils import Q
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
-from django.utils import timezone
+from django.utils.decorators import method_decorator
 from django.views import View
+from django.views.decorators.cache import cache_control
+from django.views.decorators.vary import vary_on_cookie
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, TemplateView, UpdateView
 
+from .cache import get_home_stats, get_user_stats
 from .forms import MailingForm, MessageForm, RecipientForm
-from .models import Mailing, Message, Recipient, Attempt
+from .models import Mailing, Message, Recipient
 from .services import MailingNotAllowed, refresh_statuses, send_mailing
 
 
@@ -37,18 +39,14 @@ class OwnerFormMixin:
 
 
 # ---------- Главная ----------
+@method_decorator(vary_on_cookie, name="dispatch")
+@method_decorator(cache_control(private=True, max_age=60), name="dispatch")
 class HomeView(TemplateView):
     template_name = "mailings/home.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        refresh_statuses()
-        now = timezone.now()
-        context["total_mailings"] = Mailing.objects.count()
-        context["active_mailings"] = Mailing.objects.filter(
-            status=Mailing.STARTED, start_time__lte=now, end_time__gte=now, is_disabled=False
-        ).count()
-        context["unique_recipients"] = Recipient.objects.count()
+        context.update(get_home_stats())
         return context
 
 
@@ -170,22 +168,7 @@ class StatisticsView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        user = self.request.user
-        totals = Attempt.objects.filter(mailing__owner=user).aggregate(
-            success=Count("id", filter=Q(status=Attempt.SUCCESS)),
-            fail=Count("id", filter=Q(status=Attempt.FAIL)),
-        )
-        context["success"] = totals["success"]
-        context["fail"] = totals["fail"]
-        context["sent"] = totals["success"]  # отправленные сообщения = успешные попытки
-        context["per_mailing"] = (
-            Mailing.objects.filter(owner=user)
-            .annotate(
-                success_count=Count("attempts", filter=Q(attempts__status=Attempt.SUCCESS)),
-                fail_count=Count("attempts", filter=Q(attempts__status=Attempt.FAIL)),
-            )
-            .order_by("-start_time")
-        )
+        context.update(get_user_stats(self.request.user))
         return context
 
 

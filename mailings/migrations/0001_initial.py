@@ -24,9 +24,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "attempt_time",
-                    models.DateTimeField(
-                        auto_now_add=True, verbose_name="Дата и время попытки"
-                    ),
+                    models.DateTimeField(auto_now_add=True, verbose_name="Дата и время попытки"),
                 ),
                 (
                     "status",
@@ -38,9 +36,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "server_response",
-                    models.TextField(
-                        blank=True, verbose_name="Ответ почтового сервера"
-                    ),
+                    models.TextField(blank=True, verbose_name="Ответ почтового сервера"),
                 ),
             ],
             options={
@@ -78,9 +74,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "is_disabled",
-                    models.BooleanField(
-                        default=False, verbose_name="Отключена менеджером"
-                    ),
+                    models.BooleanField(default=False, verbose_name="Отключена менеджером"),
                 ),
             ],
             options={
@@ -131,9 +125,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "email",
-                    models.EmailField(
-                        max_length=254, unique=True, verbose_name="Email"
-                    ),
+                    models.EmailField(max_length=254, unique=True, verbose_name="Email"),
                 ),
                 (
                     "full_name",

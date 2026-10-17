@@ -49,9 +49,7 @@ class Mailing(models.Model):
     start_time = models.DateTimeField("Начало отправки")
     end_time = models.DateTimeField("Окончание отправки")
     status = models.CharField("Статус", max_length=20, choices=STATUS_CHOICES, default=CREATED)
-    message = models.ForeignKey(
-        Message, on_delete=models.CASCADE, related_name="mailings", verbose_name="Сообщение"
-    )
+    message = models.ForeignKey(Message, on_delete=models.CASCADE, related_name="mailings", verbose_name="Сообщение")
     recipients = models.ManyToManyField(Recipient, related_name="mailings", verbose_name="Получатели")
     is_disabled = models.BooleanField("Отключена менеджером", default=False)
 
@@ -99,9 +97,7 @@ class Attempt(models.Model):
     attempt_time = models.DateTimeField("Дата и время попытки", auto_now_add=True)
     status = models.CharField("Статус", max_length=20, choices=STATUS_CHOICES)
     server_response = models.TextField("Ответ почтового сервера", blank=True)
-    mailing = models.ForeignKey(
-        Mailing, on_delete=models.CASCADE, related_name="attempts", verbose_name="Рассылка"
-    )
+    mailing = models.ForeignKey(Mailing, on_delete=models.CASCADE, related_name="attempts", verbose_name="Рассылка")
 
     class Meta:
         verbose_name = "Попытка рассылки"
