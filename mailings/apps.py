@@ -6,5 +6,5 @@ class MailingsConfig(AppConfig):
     name = "mailings"
     verbose_name = "Рассылки"
 
-    def ready(self):
+    def ready(self) -> None:
         from . import signals  # noqa: F401

@@ -1,6 +1,9 @@
+from typing import Any
+
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from django.db.models import Count
+from django.db.models import Count, QuerySet
+from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
@@ -8,6 +11,7 @@ from django.views import View
 from django.views.decorators.cache import cache_control
 from django.views.decorators.vary import vary_on_cookie
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, TemplateView, UpdateView
+from django.views.generic.edit import ModelFormMixin
 
 from .cache import get_home_stats, get_user_stats
 from .forms import MailingForm, MessageForm, RecipientForm
@@ -18,8 +22,8 @@ from .services import MailingNotAllowed, refresh_statuses, send_mailing
 class VisibleQuerysetMixin(LoginRequiredMixin):
     """Пользователь видит своё, менеджер (с правом) видит всё."""
 
-    def get_queryset(self):
-        qs = super().get_queryset()
+    def get_queryset(self) -> QuerySet[Any]:
+        qs: QuerySet[Any] = super().get_queryset()
         if self.request.user.has_perm("mailings.can_view_all_mailings"):
             return qs
         return qs.filter(owner=self.request.user)
@@ -28,14 +32,22 @@ class VisibleQuerysetMixin(LoginRequiredMixin):
 class OwnQuerysetMixin(LoginRequiredMixin):
     """Менять и удалять можно только свои объекты."""
 
-    def get_queryset(self):
-        return super().get_queryset().filter(owner=self.request.user)
+    def get_queryset(self) -> QuerySet[Any]:
+        qs: QuerySet[Any] = super().get_queryset()
+        return qs.filter(owner=self.request.user)
 
 
-class OwnerFormMixin:
-    def form_valid(self, form):
+class OwnerFormMixin(ModelFormMixin):
+    def form_valid(self, form: Any) -> HttpResponse:
         form.instance.owner = self.request.user
         return super().form_valid(form)
+
+
+class MailingFormKwargsMixin(ModelFormMixin):
+    def get_form_kwargs(self) -> dict[str, Any]:
+        kwargs: dict[str, Any] = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
 
 
 # ---------- Главная ----------
@@ -44,8 +56,8 @@ class OwnerFormMixin:
 class HomeView(TemplateView):
     template_name = "mailings/home.html"
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context: dict[str, Any] = super().get_context_data(**kwargs)
         context.update(get_home_stats())
         return context
 
@@ -108,25 +120,19 @@ class MessageDeleteView(OwnQuerysetMixin, DeleteView):
 class MailingListView(VisibleQuerysetMixin, ListView):
     model = Mailing
 
-    def get_queryset(self):
+    def get_queryset(self) -> QuerySet[Any]:
         refresh_statuses()
-        return super().get_queryset().select_related("message").annotate(recipients_count=Count("recipients"))
+        qs: QuerySet[Any] = super().get_queryset()
+        return qs.select_related("message").annotate(recipients_count=Count("recipients"))
 
 
 class MailingDetailView(VisibleQuerysetMixin, DetailView):
     model = Mailing
 
-    def get_object(self, queryset=None):
-        obj = super().get_object(queryset)
+    def get_object(self, queryset: QuerySet[Any] | None = None) -> Mailing:
+        obj: Mailing = super().get_object(queryset)
         obj.update_status()
         return obj
-
-
-class MailingFormKwargsMixin:
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs["user"] = self.request.user
-        return kwargs
 
 
 class MailingCreateView(LoginRequiredMixin, MailingFormKwargsMixin, OwnerFormMixin, CreateView):
@@ -152,7 +158,7 @@ class MailingDeleteView(OwnQuerysetMixin, DeleteView):
 
 
 class MailingSendView(LoginRequiredMixin, View):
-    def post(self, request, pk):
+    def post(self, request: HttpRequest, pk: int) -> HttpResponse:
         mailing = get_object_or_404(Mailing, pk=pk, owner=request.user)
         try:
             ok, failed = send_mailing(mailing)
@@ -163,22 +169,23 @@ class MailingSendView(LoginRequiredMixin, View):
         return redirect("mailings:mailing_detail", pk=pk)
 
 
-class StatisticsView(LoginRequiredMixin, TemplateView):
-    template_name = "mailings/statistics.html"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context.update(get_user_stats(self.request.user))
-        return context
-
-
 class MailingToggleDisabledView(PermissionRequiredMixin, View):
     permission_required = "mailings.can_disable_mailings"
 
-    def post(self, request, pk):
+    def post(self, request: HttpRequest, pk: int) -> HttpResponse:
         mailing = get_object_or_404(Mailing, pk=pk)
         mailing.is_disabled = not mailing.is_disabled
         mailing.save(update_fields=["is_disabled"])
         state = "отключена" if mailing.is_disabled else "снова включена"
         messages.success(request, f"Рассылка #{mailing.pk} {state}.")
         return redirect("mailings:mailing_detail", pk=pk)
+
+
+# ---------- Статистика ----------
+class StatisticsView(LoginRequiredMixin, TemplateView):
+    template_name = "mailings/statistics.html"
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context: dict[str, Any] = super().get_context_data(**kwargs)
+        context.update(get_user_stats(self.request.user))
+        return context

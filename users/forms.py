@@ -1,9 +1,4 @@
-from django.contrib.auth.forms import (
-    AuthenticationForm,
-    PasswordResetForm,
-    SetPasswordForm,
-    UserCreationForm,
-)
+from django.contrib.auth.forms import AuthenticationForm, PasswordResetForm, SetPasswordForm, UserCreationForm
 
 from mailings.forms import BootstrapMixin
 

@@ -1,4 +1,6 @@
-from django.core.management.base import BaseCommand, CommandError
+from typing import Any
+
+from django.core.management.base import BaseCommand, CommandError, CommandParser
 
 from mailings.models import Mailing
 from mailings.services import MailingNotAllowed, send_mailing
@@ -7,10 +9,10 @@ from mailings.services import MailingNotAllowed, send_mailing
 class Command(BaseCommand):
     help = "Отправить рассылку по её ID"
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: CommandParser) -> None:
         parser.add_argument("mailing_id", type=int)
 
-    def handle(self, *args, **options):
+    def handle(self, *args: Any, **options: Any) -> None:
         try:
             mailing = Mailing.objects.get(pk=options["mailing_id"])
         except Mailing.DoesNotExist:

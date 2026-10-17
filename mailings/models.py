@@ -34,7 +34,7 @@ class Message(models.Model):
         ordering = ["-id"]
 
     def __str__(self) -> str:
-        return self.subject
+        return str(self.subject)
 
 
 class Mailing(models.Model):

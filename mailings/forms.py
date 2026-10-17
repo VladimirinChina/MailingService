@@ -1,10 +1,12 @@
+from typing import Any
+
 from django import forms
 
 from .models import Mailing, Message, Recipient
 
 
-class BootstrapMixin:
-    def __init__(self, *args, **kwargs):
+class BootstrapMixin(forms.BaseForm):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         for field in self.fields.values():
             css = "form-select" if isinstance(field.widget, forms.Select) else "form-control"
@@ -34,7 +36,7 @@ class MailingForm(BootstrapMixin, forms.ModelForm):
             "end_time": forms.DateTimeInput(attrs={"type": "datetime-local"}, format="%Y-%m-%dT%H:%M"),
         }
 
-    def __init__(self, *args, user=None, **kwargs):
+    def __init__(self, *args: Any, user: Any = None, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         if user is not None:
             self.fields["message"].queryset = Message.objects.filter(owner=user)

@@ -1,3 +1,5 @@
+from typing import Any
+
 from django.contrib.auth.models import Group, Permission
 from django.core.management.base import BaseCommand
 
@@ -5,7 +7,7 @@ from django.core.management.base import BaseCommand
 class Command(BaseCommand):
     help = "Создаёт группу «Менеджеры» с нужными правами"
 
-    def handle(self, *args, **options):
+    def handle(self, *args: Any, **options: Any) -> None:
         group, _ = Group.objects.get_or_create(name="Менеджеры")
         codenames = [
             "can_view_all_mailings",

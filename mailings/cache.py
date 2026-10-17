@@ -1,3 +1,5 @@
+from typing import Any
+
 from django.core.cache import cache
 from django.db.models import Count, Q
 from django.utils import timezone
@@ -13,8 +15,8 @@ def user_stats_key(user_id: int) -> str:
     return f"user_stats:{user_id}"
 
 
-def get_home_stats() -> dict:
-    def compute() -> dict:
+def get_home_stats() -> dict[str, Any]:
+    def compute() -> dict[str, Any]:
         now = timezone.now()
         return {
             "total_mailings": Mailing.objects.count(),
@@ -24,11 +26,12 @@ def get_home_stats() -> dict:
             "unique_recipients": Recipient.objects.count(),
         }
 
-    return cache.get_or_set(HOME_STATS_KEY, compute, HOME_STATS_TTL)
+    stats: dict[str, Any] = cache.get_or_set(HOME_STATS_KEY, compute, HOME_STATS_TTL)
+    return stats
 
 
-def get_user_stats(user) -> dict:
-    def compute() -> dict:
+def get_user_stats(user: Any) -> dict[str, Any]:
+    def compute() -> dict[str, Any]:
         totals = Attempt.objects.filter(mailing__owner=user).aggregate(
             success=Count("id", filter=Q(status=Attempt.SUCCESS)),
             fail=Count("id", filter=Q(status=Attempt.FAIL)),
@@ -49,7 +52,8 @@ def get_user_stats(user) -> dict:
             "per_mailing": per_mailing,
         }
 
-    return cache.get_or_set(user_stats_key(user.pk), compute, USER_STATS_TTL)
+    stats: dict[str, Any] = cache.get_or_set(user_stats_key(user.pk), compute, USER_STATS_TTL)
+    return stats
 
 
 def invalidate_home_stats() -> None:

@@ -1,10 +1,13 @@
+from typing import Any
+
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
-from django.shortcuts import redirect, render, get_object_or_404
+from django.http import HttpRequest, HttpResponse
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
@@ -15,7 +18,7 @@ from .forms import UserRegisterForm
 User = get_user_model()
 
 
-def send_confirmation_email(request, user) -> None:
+def send_confirmation_email(request: HttpRequest, user: Any) -> None:
     uid = urlsafe_base64_encode(force_bytes(user.pk))
     token = default_token_generator.make_token(user)
     link = request.build_absolute_uri(reverse("users:confirm", kwargs={"uidb64": uid, "token": token}))
@@ -33,7 +36,7 @@ class RegisterView(CreateView):
     success_url = reverse_lazy("users:register_done")
     extra_context = {"title": "Регистрация", "button": "Зарегистрироваться"}
 
-    def form_valid(self, form):
+    def form_valid(self, form: Any) -> HttpResponse:
         user = form.save(commit=False)
         user.is_active = False
         user.save()
@@ -41,10 +44,10 @@ class RegisterView(CreateView):
         return redirect(self.success_url)
 
 
-def confirm_email(request, uidb64, token):
+def confirm_email(request: HttpRequest, uidb64: str, token: str) -> HttpResponse:
     try:
         user = User.objects.get(pk=force_str(urlsafe_base64_decode(uidb64)))
-    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+    except TypeError, ValueError, OverflowError, User.DoesNotExist:
         user = None
 
     if user is not None and default_token_generator.check_token(user, token):
@@ -70,7 +73,7 @@ class UserListView(PermissionRequiredMixin, ListView):
 class ToggleUserActiveView(PermissionRequiredMixin, View):
     permission_required = "users.can_block_users"
 
-    def post(self, request, pk):
+    def post(self, request: HttpRequest, pk: int) -> HttpResponse:
         target = get_object_or_404(User, pk=pk)
         if target.pk == request.user.pk or target.is_superuser:
             messages.error(request, "Этого пользователя заблокировать нельзя.")
