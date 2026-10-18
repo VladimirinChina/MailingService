@@ -2,15 +2,19 @@ import os
 from pathlib import Path
 
 import certifi
+from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 os.environ.setdefault("SSL_CERT_FILE", certifi.where())
 
-SECRET_KEY = os.getenv("SECRET_KEY", "dev-insecure-key")
-DEBUG = os.getenv("DEBUG", "True") == "True"
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    raise ImproperlyConfigured("Задайте SECRET_KEY в файле .env (см. .env.example)")
+
+DEBUG = os.getenv("DEBUG", "False") == "True"
+ALLOWED_HOSTS = [host for host in os.getenv("ALLOWED_HOSTS", "").split(",") if host]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
