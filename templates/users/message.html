@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="h3 mb-3">{{ title }}</h1>
+<p>{{ text }}</p>
+{% if link_url %}<a class="btn btn-primary" href="{{ link_url }}">{{ link_text }}</a>{% endif %}
+{% endblock %}

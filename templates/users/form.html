@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="h3 mb-3">{{ title }}</h1>
+{% if validlink == False %}
+  <div class="alert alert-danger">Ссылка недействительна или устарела. Запросите новую.</div>
+  <a href="{% url 'users:password_reset' %}">Восстановить пароль</a>
+{% endif %}
+{% if form %}
+<form method="post" class="col-md-6">
+  {% csrf_token %}
+  {{ form.as_div }}
+  <button class="btn btn-primary mt-3">{{ button|default:"Отправить" }}</button>
+</form>
+{% endif %}
+{% endblock %}

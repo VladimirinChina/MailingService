@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="h3 mb-4">Моя статистика</h1>
+<div class="row g-3 mb-4">
+  <div class="col-md-4"><div class="card text-center p-4"><div class="display-5 text-success">{{ success }}</div>Успешных попыток</div></div>
+  <div class="col-md-4"><div class="card text-center p-4"><div class="display-5 text-danger">{{ fail }}</div>Неуспешных попыток</div></div>
+  <div class="col-md-4"><div class="card text-center p-4"><div class="display-5">{{ sent }}</div>Отправлено сообщений</div></div>
+</div>
+
+<h2 class="h5">По рассылкам</h2>
+<table class="table table-striped">
+  <thead><tr><th>#</th><th>Статус</th><th>Начало</th><th>Успешно</th><th>Не успешно</th></tr></thead>
+  <tbody>
+  {% for m in per_mailing %}
+    <tr>
+      <td><a href="{% url 'mailings:mailing_detail' m.pk %}">{{ m.pk }}</a></td>
+      <td>{{ m.status }}</td>
+      <td>{{ m.start_time|date:"d.m.Y H:i" }}</td>
+      <td>{{ m.success_count }}</td>
+      <td>{{ m.fail_count }}</td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="5">Рассылок пока нет</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
