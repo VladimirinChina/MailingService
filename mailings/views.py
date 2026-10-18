@@ -43,7 +43,7 @@ class OwnerFormMixin(ModelFormMixin):
         return super().form_valid(form)
 
 
-class MailingFormKwargsMixin(ModelFormMixin):
+class UserFormKwargsMixin(ModelFormMixin):
     def get_form_kwargs(self) -> dict[str, Any]:
         kwargs: dict[str, Any] = super().get_form_kwargs()
         kwargs["user"] = self.request.user
@@ -67,7 +67,7 @@ class RecipientListView(VisibleQuerysetMixin, ListView):
     model = Recipient
 
 
-class RecipientCreateView(LoginRequiredMixin, OwnerFormMixin, CreateView):
+class RecipientCreateView(LoginRequiredMixin, UserFormKwargsMixin, OwnerFormMixin, CreateView):
     model = Recipient
     form_class = RecipientForm
     template_name = "mailings/form.html"
@@ -75,7 +75,7 @@ class RecipientCreateView(LoginRequiredMixin, OwnerFormMixin, CreateView):
     extra_context = {"title": "Новый получатель"}
 
 
-class RecipientUpdateView(OwnQuerysetMixin, UpdateView):
+class RecipientUpdateView(OwnQuerysetMixin, UserFormKwargsMixin, UpdateView):
     model = Recipient
     form_class = RecipientForm
     template_name = "mailings/form.html"
@@ -135,7 +135,7 @@ class MailingDetailView(VisibleQuerysetMixin, DetailView):
         return obj
 
 
-class MailingCreateView(LoginRequiredMixin, MailingFormKwargsMixin, OwnerFormMixin, CreateView):
+class MailingCreateView(LoginRequiredMixin, UserFormKwargsMixin, OwnerFormMixin, CreateView):
     model = Mailing
     form_class = MailingForm
     template_name = "mailings/form.html"
@@ -143,7 +143,7 @@ class MailingCreateView(LoginRequiredMixin, MailingFormKwargsMixin, OwnerFormMix
     extra_context = {"title": "Новая рассылка"}
 
 
-class MailingUpdateView(OwnQuerysetMixin, MailingFormKwargsMixin, UpdateView):
+class MailingUpdateView(OwnQuerysetMixin, UserFormKwargsMixin, UpdateView):
     model = Mailing
     form_class = MailingForm
     template_name = "mailings/form.html"

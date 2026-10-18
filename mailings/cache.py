@@ -23,7 +23,7 @@ def get_home_stats() -> dict[str, Any]:
             "active_mailings": Mailing.objects.filter(
                 start_time__lte=now, end_time__gte=now, is_disabled=False
             ).count(),
-            "unique_recipients": Recipient.objects.count(),
+            "unique_recipients": Recipient.objects.values("email").distinct().count(),
         }
 
     stats: dict[str, Any] = cache.get_or_set(HOME_STATS_KEY, compute, HOME_STATS_TTL)

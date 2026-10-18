@@ -8,7 +8,7 @@ class Recipient(models.Model):
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="recipients", verbose_name="Владелец"
     )
-    email = models.EmailField("Email", unique=True)
+    email = models.EmailField("Email")
     full_name = models.CharField("Ф. И. О.", max_length=255)
     comment = models.TextField("Комментарий", blank=True)
 
@@ -16,6 +16,9 @@ class Recipient(models.Model):
         verbose_name = "Получатель"
         verbose_name_plural = "Получатели"
         ordering = ["full_name"]
+        constraints = [
+            models.UniqueConstraint(fields=["owner", "email"], name="unique_recipient_email_per_owner"),
+        ]
 
     def __str__(self) -> str:
         return f"{self.full_name} <{self.email}>"

@@ -19,6 +19,20 @@ class RecipientForm(BootstrapMixin, forms.ModelForm):
         fields = ["email", "full_name", "comment"]
         widgets = {"comment": forms.Textarea(attrs={"rows": 3})}
 
+    def __init__(self, *args: Any, user: Any = None, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self.user = user
+
+    def clean_email(self) -> str:
+        email: str = self.cleaned_data["email"]
+        if self.user is not None:
+            duplicates = Recipient.objects.filter(owner=self.user, email=email)
+            if self.instance.pk:
+                duplicates = duplicates.exclude(pk=self.instance.pk)
+            if duplicates.exists():
+                raise forms.ValidationError("У вас уже есть получатель с таким email.")
+        return email
+
 
 class MessageForm(BootstrapMixin, forms.ModelForm):
     class Meta:
