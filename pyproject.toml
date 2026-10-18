@@ -18,13 +18,6 @@ dependencies = [
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
 
-[dependency-groups]
-dev = [
-    "black (>=26.10.1,<27.0.0)",
-    "flake8 (>=7.4.1,<8.0.0)",
-    "mypy (>=2.4.0,<3.0.0)",
-    "isort (>=9.0.2,<10.0.0)"
-]
 
 [tool.black]
 line_length = 119
@@ -40,7 +33,7 @@ exclude = '''
 line_length = 119
 
 [tool.mypy]
-python_version = "3.13"
+python_version = "3.14"
 # mypy_path = "src"
 disallow_untyped_defs = true
 warn_return_any = true
@@ -54,5 +47,12 @@ ignore_missing_imports = true
 max-line-length = 119
 exclude = [".venv", ".git", "__pycache__"]
 
+
 [tool.poetry]
 package-mode = false
+
+[tool.poetry.group.dev.dependencies]
+black = ">=26.10.1,<27.0.0"
+flake8 = ">=7.4.1,<8.0.0"
+mypy = ">=2.4.0,<3.0.0"
+isort = ">=9.0.2,<10.0.0"
