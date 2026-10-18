@@ -61,8 +61,8 @@ poetry run python manage.py runserver
 
 | Переменная | Назначение | Пример |
 |---|---|---|
-| `SECRET_KEY` | секретный ключ Django | `change-me` |
-| `DEBUG` | режим отладки | `True` |
+| `SECRET_KEY` | секретный ключ Django, **обязательная** переменная | см. ниже |
+| `DEBUG` | режим отладки (по умолчанию 'False') | `True` |
 | `ALLOWED_HOSTS` | разрешённые хосты через запятую | `localhost,127.0.0.1` |
 | `EMAIL_BACKEND` | бэкенд отправки почты | `django.core.mail.backends.smtp.EmailBackend` |
 | `EMAIL_HOST` | SMTP-сервер | `smtp.gmail.com` |
@@ -135,6 +135,20 @@ poetry add redis
 
 **Клиентское.** Главная страница отдаётся с заголовками `Cache-Control: private, max-age=60` и `Vary: Cookie`: браузер может держать её минуту, а после входа или выхода получит свежую версию. Проверить: `curl -I http://127.0.0.1:8000/`.
 
+### Генерация SECRET_KEY
+
+```bash
+poetry run python -c "from django.core.management.utils import get_random_secret_key as g; print(g())"
+```
+
+## Тесты
+
+```bash
+poetry run python manage.py test
+```
+
+Покрыты: время отправки (разрешённое и запрещённое), успешная и ошибочная отправка, права владельца и менеджера, регистрация и вход, кеширование.
+
 ## Качество кода
 
 ```bash
@@ -149,3 +163,4 @@ poetry run mypy .
 
 - Блокировка пользователя реализована через `is_active`, как и неподтверждённый email. В дальнейшем её можно вынести в отдельное поле.
 - По умолчанию используется SQLite; другая СУБД подключается заменой настройки `DATABASES`.
+- email получателя уникален в рамках одного пользователя.
